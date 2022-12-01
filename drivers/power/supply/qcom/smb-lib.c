@@ -220,6 +220,24 @@ enum {
 	MAX_TYPES
 };
 
+/*
+ * kholk 04/06/20: disable QC2/3.0 for disconnection issue.
+ *                 at this point, we allow only USB PD 9V.
+ */
+#define QPNP_SMBFG_DISABLE_HVDCP
+
+#ifdef QPNP_SMBFG_DISABLE_HVDCP
+ #define QPNP_SMBFG_HVDCP2_BIT	DCP_CHARGER_BIT
+ #define QPNP_SMBFG_HVDCP2_TYPE	POWER_SUPPLY_TYPE_USB_DCP
+ #define QPNP_SMBFG_HVDCP3_BIT	DCP_CHARGER_BIT
+ #define QPNP_SMBFG_HVDCP3_TYPE	POWER_SUPPLY_TYPE_USB_DCP
+#else
+ #define QPNP_SMBFG_HVDCP2_BIT	(DCP_CHARGER_BIT | QC_2P0_BIT)
+ #define QPNP_SMBFG_HVDCP2_TYPE POWER_SUPPLY_TYPE_USB_HVDCP
+ #define QPNP_SMBFG_HVDCP3_BIT	(DCP_CHARGER_BIT | QC_3P0_BIT)
+ #define QPNP_SMBFG_HVDCP3_TYPE	POWER_SUPPLY_TYPE_USB_HVDCP_3
+#endif
+
 static const struct apsd_result smblib_apsd_results[] = {
 	[UNKNOWN] = {
 		.name	= "UNKNOWN",
@@ -253,13 +271,13 @@ static const struct apsd_result smblib_apsd_results[] = {
 	},
 	[HVDCP2] = {
 		.name	= "HVDCP2",
-		.bit	= DCP_CHARGER_BIT | QC_2P0_BIT,
-		.pst	= POWER_SUPPLY_TYPE_USB_HVDCP
+		.bit	= QPNP_SMBFG_HVDCP2_BIT,
+		.pst	= QPNP_SMBFG_HVDCP2_TYPE
 	},
 	[HVDCP3] = {
 		.name	= "HVDCP3",
-		.bit	= DCP_CHARGER_BIT | QC_3P0_BIT,
-		.pst	= POWER_SUPPLY_TYPE_USB_HVDCP_3,
+		.bit	= QPNP_SMBFG_HVDCP3_BIT,
+		.pst	= QPNP_SMBFG_HVDCP3_TYPE,
 	},
 };
 
@@ -2978,7 +2996,7 @@ int smblib_set_prop_pd_voltage_max(struct smb_charger *chg,
 static int __smblib_set_prop_pd_active(struct smb_charger *chg, bool pd_active)
 {
 	int rc;
-	bool orientation, sink_attached, hvdcp;
+	bool orientation, sink_attached, hvdcp = false;
 	u8 stat;
 
 	chg->pd_active = pd_active;
@@ -3039,7 +3057,9 @@ static int __smblib_set_prop_pd_active(struct smb_charger *chg, bool pd_active)
 			return rc;
 		}
 
+#ifndef QPNP_SMBFG_DISABLE_HVDCP
 		hvdcp = stat & QC_CHARGER_BIT;
+#endif
 		vote(chg->apsd_disable_votable, PD_VOTER, false, 0);
 		vote(chg->pd_allowed_votable, PD_VOTER, false, 0);
 		vote(chg->usb_irq_enable_votable, PD_VOTER, false, 0);
