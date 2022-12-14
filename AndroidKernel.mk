@@ -2,7 +2,7 @@
 PERL		= perl
 
 KERNEL_TARGET := $(strip $(INSTALLED_KERNEL_TARGET))
-ifeq ($(KERNEL_TARGET),)
+ifeq ($(KERNEL_TARGET),
 INSTALLED_KERNEL_TARGET := $(PRODUCT_OUT)/kernel
 endif
 

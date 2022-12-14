@@ -1161,7 +1161,7 @@ static const struct frac_entry frac_table_pixel[] = {
 	{ 3, 8 },
 	{ 2, 9 },
 	{ }
-};
+}
 
 static int clk_pixel_determine_rate(struct clk_hw *hw,
 				    struct clk_rate_request *req)
